@@ -10,11 +10,45 @@ const routes = [
   },{
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/login/Login'),
+    component: () => import('@/views/login/Login')
   },{
     path: '/home',
     name: 'Home',
-    component: () => import('@/views/home/Home')
+    component: () => import('@/views/home/Home'),
+    children: [{
+      path: '/users',
+      name: 'Users',
+      component: () => import('@/views/user/Users')
+    },{
+      path: '/roles',
+      name: 'Roles',
+      component: () => import('@/views/role/Roles')
+    },{
+      path: '/groups',
+      name: 'Groups',
+      component: () => import('@/views/group/Groups')
+    },{
+      path: '/projects',
+      name: 'Projects',
+      component: () => import('@/views/project/Projects')
+    },{
+      path: '/logs',
+      name: 'Logs',
+      component: () => import('@/views/log/Logs'),
+      children: [{
+        path: '/logs/system',
+        name: 'System',
+        component: () => import('@/views/log/System'),
+      },{
+        path: '/logs/requests',
+        name: 'Requests',
+        component: () => import('@/views/log/Requests'),
+      }]
+    },{
+      path: '/storages',
+      name: 'Storages',
+      component: () => import('@/views/storage/Storages')
+    }]
   }
 ]
 
