@@ -1,6 +1,6 @@
 <template>
   <div class="">
-    {{sss}}
+    sssssssss
   </div>
 </template>
 

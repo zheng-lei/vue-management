@@ -1,6 +1,12 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
+//解决重复点击菜单报错问题
+const originalPush = VueRouter.prototype.push;
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err);
+}
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -16,36 +22,35 @@ const routes = [
     name: 'Home',
     component: () => import('@/views/home/Home'),
     children: [{
-      path: '/users',
+      path: 'users',
       name: 'Users',
       component: () => import('@/views/user/Users')
     },{
-      path: '/roles',
+      path: 'roles',
       name: 'Roles',
       component: () => import('@/views/role/Roles')
     },{
-      path: '/groups',
+      path: 'groups',
       name: 'Groups',
       component: () => import('@/views/group/Groups')
     },{
-      path: '/projects',
+      path: 'projects',
       name: 'Projects',
       component: () => import('@/views/project/Projects')
     },{
-      path: '/logs',
+      path: 'logs',
       name: 'Logs',
-      component: () => import('@/views/log/Logs'),
       children: [{
-        path: '/logs/system',
+        path: 'system',
         name: 'System',
         component: () => import('@/views/log/System'),
       },{
-        path: '/logs/requests',
+        path: 'requests',
         name: 'Requests',
         component: () => import('@/views/log/Requests'),
       }]
     },{
-      path: '/storages',
+      path: 'storages',
       name: 'Storages',
       component: () => import('@/views/storage/Storages')
     }]

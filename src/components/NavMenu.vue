@@ -1,13 +1,13 @@
 <template>
     <div>
-        <el-submenu v-if='menu.children' :index='menu.id + ""'>
+        <el-submenu v-if='menu.children' :index='menu.url'>
             <template slot='title'>
                 <i class="el-icon-menu"></i>
                 <span>{{menu.name}}</span>
             </template>
             <nav-menu v-for='menuChild in menu.children' :key='menuChild.name' :menu='menuChild'></nav-menu>
         </el-submenu>
-        <el-menu-item v-if='!menu.children' :index='menu.id + ""'>
+        <el-menu-item v-if='!menu.children' :index='menu.url'>
             <template slot='title'>
                 <i class="el-icon-menu"></i>
                 <span>{{menu.name}}</span>
@@ -26,16 +26,14 @@ export default {
     props: ['menu'],
     data() {
         return {
-            activePath: ''
+            
         }
     },
     created() {
-        this.activePath = this.menu.url;
+        
     },
     methods: {
-        showView() {
-            
-        }
+        
     }
 }
 </script>

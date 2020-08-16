@@ -11,6 +11,7 @@ let isRefresh = false;
 let refreshSubscribers = [];
 //存储请求的方法
 function subscribeTokenRefresh(cb) {
+    console.log(cb)
     refreshSubscribers.push(cb);
 }
 //新的token执行存储的请求
@@ -24,7 +25,7 @@ function isRefreshTokenExpired() {
     let nowDate = new Date().getTime();
     let stemp = parseInt(nowDate) - parseInt(loginDate);
     let minutes = parseInt((stemp % (1000 * 60 * 60)) / (1000 * 60));
-    return minutes >= 29 ? true : false;
+    return minutes >= 14 ? true : false;
 }
 //添加请求拦截器
 instance.interceptors.request.use(config => {

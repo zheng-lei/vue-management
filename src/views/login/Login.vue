@@ -84,7 +84,7 @@ export default {
 					if(redirect) {
 						this.$router.push(redirect);
 					}else {
-						this.$router.push('/home');
+						this.$router.push('/home/users');
 					}
 				}).catch(err => {
 					this.errorMessage = err.message;
