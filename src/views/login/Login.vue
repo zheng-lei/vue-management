@@ -85,6 +85,7 @@ export default {
 						this.$router.push(redirect);
 					}else {
 						this.$router.push('/home/users');
+						window.sessionStorage.setItem('user', this.email);
 					}
 				}).catch(err => {
 					this.errorMessage = err.message;

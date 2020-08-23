@@ -15,7 +15,9 @@ export default {
     data() {
         return {
             filetype: "test-type",
-            header: 'Bearer ' + window.sessionStorage.getItem('access_token'),
+            get header() {
+                return 'Bearer ' + window.sessionStorage.getItem('access_token')
+            },
             fileList: []
         }
     }

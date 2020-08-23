@@ -85,4 +85,7 @@ export default {
     background-color: #F8F9FA;
     border-bottom: 1px solid #eee;
   }
+  .right-wrap {
+    height: calc(100% - 54px);
+  }
 </style>
