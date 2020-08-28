@@ -20,7 +20,9 @@ import {
   Form,
   FormItem,
   Input,
-  Radio
+  Radio,
+  Pagination,
+  Loading
 } from 'element-ui'
 import { joinUrl } from '@/common/util';
 
@@ -41,6 +43,8 @@ Vue.use(Dialog)
 Vue.use(Form)
 Vue.use(FormItem)
 Vue.use(Input)
+Vue.use(Pagination)
+Vue.use(Loading)
 Vue.prototype.$msgBox = MessageBox
 Vue.prototype.joinUrl = joinUrl
 Vue.prototype.$message = Message

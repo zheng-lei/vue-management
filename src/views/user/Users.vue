@@ -5,32 +5,48 @@
         <el-button type="primary" @click="addUserClick">添加</el-button>
         <el-button type="primary" @click="modifyUserClick">修改</el-button>
         <el-button type="primary" @click="delUserClick">删除</el-button>
+        <el-input placeholder="请输入用户名" prefix-icon="el-icon-search" class="user-search" v-model="keyword" @change="queryUser"></el-input>
       </div>
     </div>
     <div class="users-container">
       <el-table
         border
         :data="usersTableData"
-        style="height:100%"
+        style="height:calc(100% - 62px)"
         stripe
         @selection-change="handleSelectionChange"
+        v-loading="loading"
+        element-loading-text="拼命加载中"
+        element-loading-spinner="el-icon-loading"
+        element-loading-background="rgba(0, 0, 0, 0.6)"
       >
         <!-- <el-table-column label="头像">
           <template slot-scope="scope">
             <img :src="'http://118.25.93.129:8083/api/v1/storages/' + scope.row.userinfo.avator_id + '?token=' + token" />
           </template>
-        </el-table-column> -->
+        </el-table-column>-->
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column label="用户名" prop="username"></el-table-column>
         <el-table-column label="用户组" prop="groups"></el-table-column>
         <el-table-column label="角色" prop="roles" :formatter="columnFormatter"></el-table-column>
       </el-table>
-      <Dialog :isShow.sync="addUserDialogVisible" title="添加用户" @confirmBtnClick="addUser">
+      <el-pagination
+        :current-page="currentPage"
+        :page-sizes="[5, 10, 15, 20]"
+        :page-size="10"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="totalPage"
+        background
+      ></el-pagination>
+      <Dialog
+        :isShow.sync="addUserDialogVisible"
+        :title="userDialogTitle"
+        @confirmBtnClick="userDialogClick"
+      >
         <div class="upload-img">
           <el-upload
             class="avatar-uploader"
-            :action='joinUrl("/api/v1/storages/upload/avators")'
-            
+            :action="joinUrl('/api/v1/storages/upload/avators')"
             :show-file-list="false"
             :on-success="updateAvator"
           >
@@ -55,10 +71,10 @@
             <el-radio v-model="ruleForm.userinfo.sex" :label="1">男</el-radio>
             <el-radio v-model="ruleForm.userinfo.sex" :label="2">女</el-radio>
           </el-form-item>
-          <el-form-item label="密码" prop="password">
+          <el-form-item label="密码" prop="password" v-show="!isModify">
             <el-input type="password" placeholder="请输入密码" v-model="ruleForm.password"></el-input>
           </el-form-item>
-          <el-form-item label="确认密码" prop="repeatPassword">
+          <el-form-item label="确认密码" prop="repeatPassword" v-show="!isModify">
             <el-input type="password" placeholder="请再次输入密码" v-model="ruleForm.repeatPassword"></el-input>
           </el-form-item>
           <el-form-item label="手机号码" prop="phonenum">
@@ -101,11 +117,10 @@ export default {
       }
     };
     return {
+      userDialogTitle: "",
       usersTableData: [],
       selectionData: [],
       addUserDialogVisible: false,
-      modifyUserDialogVisible: false,
-      delUserDialogVisible: true,
       ruleForm: {
         username: "",
         password: "",
@@ -159,8 +174,13 @@ export default {
       },
       imageUrl: this.joinUrl("/api/v1/storages/2"),
       get header() {
-        return "Bearer " + window.sessionStorage.getItem("access_token")
+        return "Bearer " + window.sessionStorage.getItem("access_token");
       },
+      isModify: false,
+      currentPage: 1,
+      totalPage: null,
+      loading: false,
+      keyword: ""
       // token: window.sessionStorage.getItem("access_token")
     };
   },
@@ -171,23 +191,49 @@ export default {
     addUserDialogVisible: {
       mmediate: true, //表示首次绑定时是否执行handler
       handler() {
-        if(!this.addUserDialogVisible)
+        if (!this.addUserDialogVisible) {
           this.$refs.ruleForm.resetFields();
+          this.ruleForm = {
+            username: "",
+            password: "",
+            repeatPassword: "",
+            phonenum: "",
+            email: "",
+            userinfo: {
+              first_name: "",
+              last_name: "",
+              sex: 1,
+              age: null,
+              avator_id: 2,
+            },
+          };
+        }
       },
     },
   },
   methods: {
-    async initUsersTable() {
-      let data = await this.$axios({
+    //获取表格数据
+    async initUsersTable(keyword) {
+      let param ={
+        username: ''
+      };
+      if(keyword !== undefined){
+        param = {
+          username: this.keyword
+        }
+      }
+      this.loading = true;
+      await this.$axios({
         methods: "get",
         url: "/api/v1/users",
-        params: {
-          username: "",
-        },
+        params: param,
+      }).then((data) => {
+        this.usersTableData = data.data.data;
+        this.totalPage = data.data.meta.total;
+        this.loading = false;
       });
-      this.usersTableData = data.data.data;
-      console.log(this.usersTableData);
     },
+    //表格角色展示处理
     columnFormatter(val) {
       let rolesArr = [];
       for (let k of val.roles) {
@@ -195,11 +241,16 @@ export default {
       }
       return rolesArr.join(",");
     },
+    //获取表格选中项数据
     handleSelectionChange(val) {
       this.selectionData = val;
+      console.log(val);
     },
     addUserClick() {
+      this.userDialogTitle = "添加用户";
       this.addUserDialogVisible = true;
+      this.isModify = false;
+      this.imageUrl = this.joinUrl("/api/v1/storages/2");
       // this.$msgBox({
       //   title: '添加',//标题
       //   message: <p>111</p>,//正文
@@ -229,33 +280,127 @@ export default {
       //   })
       // }).catch(() => {})
     },
-    addUser() {
+    userDialogClick() {
       let requestData = this.ruleForm;
-      delete requestData.repeatPassword;
-      this.$axios.put("/api/v1/users/register", requestData).then((res) => {
-        this.initUsersTable();
-        this.addUserDialogVisible = false;
-        this.$message({
-          type: "success",
-          message: "操作成功",
-        });
-      }).catch(err => {
-        this.$message({
-          type: 'error',
-          message: '操作失败'
-        })
-      });
+      if (!this.isModify) {
+        delete requestData.repeatPassword;
+        this.$axios
+          .put("/api/v1/users/register", requestData)
+          .then((res) => {
+            this.initUsersTable();
+            this.addUserDialogVisible = false;
+            this.$message({
+              type: "success",
+              message: "操作成功",
+            });
+          })
+          .catch((err) => {
+            this.$message({
+              type: "error",
+              message: "操作失败",
+            });
+          });
+      } else {
+        delete requestData.repeatPassword;
+        delete requestData.password;
+        this.$axios
+          .put(`/api/v1/users/${this.selectionData[0].id}`, requestData)
+          .then((res) => {
+            this.initUsersTable();
+            this.addUserDialogVisible = false;
+            this.$message({
+              type: "success",
+              message: "操作成功",
+            });
+          })
+          .catch((err) => {
+            this.$message({
+              type: "error",
+              message: "操作失败",
+            });
+          });
+      }
     },
+    //头像上传成功处理
     updateAvator(res) {
       this.imageUrl = this.joinUrl(`/api/v1/storages/${res.data.file_id}`);
       this.ruleForm.userinfo.avator_id = res.data.file_id;
     },
     modifyUserClick() {
-      this.modifyUserDialogVisible = true;
+      if (this.selectionData.length === 0) {
+        this.$message({
+          type: "warning",
+          message: "请选择",
+        });
+      } else if (this.selectionData.length > 1) {
+        this.$message({
+          type: "warning",
+          message: "只能选择一个用户",
+        });
+      } else {
+        this.userDialogTitle = "修改用户";
+        this.ruleForm.userinfo = this.selectionData[0].userinfo;
+        this.ruleForm.username = this.selectionData[0].username;
+        this.ruleForm.email = this.selectionData[0].email;
+        this.ruleForm.phonenum = this.selectionData[0].phonenum;
+        this.imageUrl = this.joinUrl(
+          `/api/v1/storages/${this.selectionData[0].userinfo.avator_id}`
+        );
+        this.addUserDialogVisible = true;
+        this.isModify = true;
+      }
     },
     delUserClick() {
-      this.delUserDialogVisible = true;
+      if (this.selectionData.length === 0) {
+        this.$message({
+          type: "warning",
+          message: "请选择",
+        });
+      } else if (this.selectionData.length === 1) {
+        this.$axios
+          .delete(`/api/v1/users/${this.selectionData[0].id}`)
+          .then((res) => {
+            this.$message({
+              type: "success",
+              message: "操作成功",
+            });
+            this.initUsersTable();
+          })
+          .catch((err) => {
+            this.$message({
+              type: "error",
+              message: "操作失败",
+            });
+          });
+      } else {
+        let lst = [];
+        for (let val of this.selectionData) {
+          lst.push(val.id);
+        }
+        this.$axios
+          .delete("/api/v1/users", {
+            data: {
+              lst: lst,
+            },
+          })
+          .then((res) => {
+            this.$message({
+              type: "success",
+              message: "操作成功",
+            });
+            this.initUsersTable();
+          })
+          .catch((err) => {
+            this.$message({
+              type: "error",
+              message: "操作失败",
+            });
+          });
+      }
     },
+    queryUser() {
+      this.initUsersTable(this.keyword);
+    }
   },
 };
 </script>
@@ -331,5 +476,13 @@ export default {
   to {
     opacity: 1;
   }
+}
+.el-pagination {
+  margin-top: 10px;
+  text-align: center;
+}
+.user-search {
+  width: 290px;
+  margin-left: auto;
 }
 </style>
